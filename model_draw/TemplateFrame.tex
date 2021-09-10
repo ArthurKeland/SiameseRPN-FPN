@@ -1,0 +1,248 @@
+\documentclass[border=15pt, multi, tikz]{standalone}
+\usepackage{import}
+\subimport{./layers/}{init}
+\usetikzlibrary{positioning}
+
+\def\ConvColor{rgb:yellow,5;red,2.5;white,5}
+\def\ConvReluColor{rgb:yellow,5;red,5;white,5}
+\def\PoolColor{rgb:red,1;black,0.3}
+\def\DcnvColor{rgb:blue,5;green,2.5;white,5}
+\def\SoftmaxColor{rgb:magenta,5;black,7}
+\def\SumColor{rgb:blue,5;green,15}
+\def\poolsep{1}
+
+
+\begin{document}
+\begin{tikzpicture}
+\tikzstyle{connection}=[ultra thick,every node/.style={sloped,allow upside down},draw=\edgecolor,opacity=0.6]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Draw Layer Blocks
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% 224 conv0(original image)
+\pic[shift={(0,0,0)}] at (0,0,0) 
+{Box={
+		name=conv0,
+		caption= ,
+		xlabel={{3, }},
+		zlabel=127,
+		fill=\ConvColor,
+		height=44.8,
+		width=3,
+		depth=44.8
+	}
+};
+
+% 96 conv1 and pool1
+\pic[shift={(1,0,0)}] at (conv0-east) 
+{Box={
+		name=conv1,
+		caption= ,
+		xlabel={{96, }},
+		zlabel=55,
+		fill=\ConvColor,
+		height=11.0,
+		width=4.8,
+		depth=11.0
+	}
+};
+\pic[shift={ (0,0,0) }] at (conv1-east) 
+{Box={
+		name=pool1,
+		caption= ,
+		fill=\PoolColor,
+		opacity=0.5,
+		height=5.4,
+		width=1,
+		depth=5.4
+	}
+};
+
+% 256 conv2 and pool2
+\pic[shift={(1,0,0)}] at (pool1-east) 
+{Box={
+		name=conv2,
+		caption= ,
+		xlabel={{256, }},
+		zlabel=27,
+		fill=\ConvColor,
+		height=5.4,
+		width=12.8,
+		depth=5.4
+	}
+};
+\pic[shift={ (0,0,0) }] at (conv2-east) 
+{Box={
+		name=pool2,
+		caption= ,
+		fill=\PoolColor,
+		opacity=0.5,
+		height=2.6,
+		width=1,
+		depth=2.6
+	}
+};
+
+% 384 conv3
+\pic[shift={(1,0,0)}] at (pool2-east) 
+{Box={
+		name=conv3,
+		caption= ,
+		xlabel={{384, }},
+		zlabel=13,
+		fill=\ConvColor,
+		height=2.6,
+		width=19.2,
+		depth=2.6
+	}
+};
+
+% 384 conv4
+\pic[shift={(1,0,0)}] at (conv3-east) 
+{Box={
+		name=conv4,
+		caption= ,
+		xlabel={{384, }},
+		zlabel=13,
+		fill=\ConvColor,
+		height=2.6,
+		width=19.2,
+		depth=2.6
+	}
+};
+
+% 256 conv5 and pool3
+\pic[shift={(1,0,0)}] at (conv4-east) 
+{Box={
+		name=conv5,
+		caption= ,
+		xlabel={{256, }},
+		zlabel=13,
+		fill=\ConvColor,
+		height=2.6,
+		width=12.8,
+		depth=2.6
+	}
+};
+\pic[shift={ (0,0,0) }] at (conv5-east) 
+{Box={
+		name=pool3,
+		caption= ,
+		fill=\PoolColor,
+		opacity=0.5,
+		height=1.2,
+		width=1,
+		depth=1.2
+	}
+};
+
+%% Upsampling Deconv Layer
+%% Dcnv16    
+\pic[shift={(2.5,0,0)}] at (pool3-east) {Box={name=d16,%
+		xlabel={{"","dummy"}},fill=\DcnvColor,opacity=0.7,height=40,width=0.5,depth=40}};
+%% Dcnv8    
+\pic[shift={(.25,0,0)}] at (d16-east) {Box={name=d8,%
+		xlabel={{"","dummy"}},fill=\DcnvColor,opacity=0.7,height=40,width=0.5,depth=40}};
+%% Dcnv4    
+\pic[shift={(.25,0,0)}] at (d8-east) {Box={name=d4,%
+		xlabel={{"","dummy"}},fill=\DcnvColor,opacity=0.7,height=40,width=0.5,depth=40}};
+%% Dcnv2    
+\pic[shift={(.25,0,0)}] at (d4-east) {Box={name=d2,%
+		xlabel={{"","dummy"}},fill=,opacity=0.01,height=40,width=0.5,depth=40}};
+
+% final correlation
+\pic[shift={(2,0,0)}] at (pool3-east) 
+{Box={
+		name=env,
+		caption=conrrelations of deconvolved feature maps,
+		xlabel={{"","dummy"}},
+		fill=,
+		opacity=0.2,
+		height=42,
+		width={8},
+		depth=42
+	}
+};
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\skipshift{6.5}
+%%Joining with previous streams (fcn-16)
+%% score16
+\pic[shift={(6,0,3+\skipshift)}] at (conv4-anchor) {Box={name=score8,%
+		xlabel={{"256","dummy"}},fill=\ConvColor,
+		height=2.6,
+		width=12.8,
+		depth=2.6,
+		zlabel=13}};
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%Joining with previous streams (fcn-8)
+%% score8
+\pic[shift={(5,0,6+\skipshift)}] at (conv3-east) {Box={name=score4,%
+		xlabel={{"256","dummy"}},fill=\ConvColor,
+		height=2.6,
+		width=12.8,
+		depth=2.6,
+		zlabel=13}};
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%Joining with previous streams (fcn-4)
+%% score4
+\pic[shift={(7,0,10+\skipshift)}] at (pool2-east) {Box={name=score2,%
+		xlabel={{"256","dummy"}},fill=\ConvColor,
+		height=2.6,
+		width=12.8,
+		depth=2.6,
+		zlabel=13}}; 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%Joining with previous streams (fcn-2)
+%% score2
+\pic[shift={(8,0,15+\skipshift)}] at (pool1-east) {Box={name=score,%
+		xlabel={{"256","dummy"}},fill=\ConvColor,
+		height=2.6,
+		width=12.8,
+		depth=2.6,
+		zlabel=13}};
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Final
+\pic[shift={(3,0,0)}] at (d2-east) {Box={name=output,%
+		xlabel={{"256","dummy"}},fill=\ConvColor,height=2.6,
+		width=12.8,
+		depth=2.6, zlabel=4}};
+		
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Draw connections
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\draw [connection]  (conv0-east)    -- node {\midarrow} (conv1-west);
+\draw [connection]  (pool1-east)    -- node {\midarrow} (conv2-west);
+\draw [connection]  (pool2-east)    -- node {\midarrow} (conv3-west);
+\draw [connection]  (conv3-east)    -- node {\midarrow} (conv4-west);
+\draw [connection]  (conv4-east)    -- node {\midarrow} (conv5-west);
+
+\path (conv4-east) -- (conv5-west) coordinate[pos=0.4] (after4) ;
+\draw (d16-near)++(0,0,-1+\skipshift) coordinate (d16h);
+\draw [connection]  (after4)    -- node {\midarrow} ++(0,0,3+\skipshift) -- node {\midarrow} (score8-west);
+\draw [connection]  (score8-east) -- node{\midarrow} (d16h) -- node{\midarrow}(d16-near);
+%
+\path (conv3-east) -- (conv4-west) coordinate[pos=0.4] (after3) ;
+\draw (d8-near)++(0,0,2+\skipshift) coordinate (d8h);
+\draw [connection]  (after3)    -- node {\midarrow} ++(0,0,6+\skipshift) -- node {\midarrow} (score4-west);
+\draw [connection]  (score4-east) -- node{\midarrow} (d8h) -- node{\midarrow}(d8-near);
+%
+\path (pool2-east) -- (conv3-west) coordinate[pos=0.4] (after2) ;
+\draw (d4-near)++(0,0,6+\skipshift) coordinate (d4h);
+\draw [connection]  (after2)    -- node {\midarrow} ++(0,0,10+\skipshift) -- node {\midarrow} (score2-west);
+\draw [connection]  (score2-east) -- node{\midarrow} (d4h) -- node{\midarrow}(d4-near);
+%
+\path (pool1-east) -- (conv2-west) coordinate[pos=0.4] (after1) ;
+\draw (d2-near)++(0,0,11+\skipshift) coordinate (d2h);
+\draw [connection]  (after1)    -- node {\midarrow} ++(0,0,15+\skipshift) -- node {\midarrow} (score-west);
+\draw [connection]  (score-east) -- node{\midarrow} (d2h) -- node{\midarrow}(d2-near);
+
+\draw [connection]  (pool3-east)    -- node {\midarrow} (env-west);
+\draw [connection]	(d2-east)		-- node {\midarrow} (output-west);
+
+\end{tikzpicture}
+\end{document}\grid
+
